@@ -92,39 +92,77 @@ def fill_screen(color) -> None:
         matrix[i] = color
     display.refresh()
 
+NUM_POSSIBLE_POLES = 5 #! -- change this later
+
 # -------------------------------------------------- #
 
 class Bird:
     def __init__(self):
-        self.x =  # TODO
-        self.y =  # TODO
-    
+        self.x = 8 # middle & bottom pixel of the bird
+        self.y = 8
+
     def fly_up(self):
-        # TODO
-        pass
+        y += 2
+
+    def draw_bird(self):
+        matrix[self.x, self,y] = YELLOW
+        matrix[self.x - 1, self,y] = YELLOW
+        matrix[self.x, self,y - 1] = YELLOW
+        matrix[self.x + 1, self,y - 1] = ORANGE
+        
     
     def gravity(self):
-        # TODO
-        pass
+        self.y -= 1
+
 
 class Pole:
     def __init__(self):
-        # TODO idk what sjould be here
+        # TODO idk what should be here
         pass
+    
+    def 
 
 # ---------------- Game ----------------
 class Game:
     def __init__(self) -> None:
-        # TODO
-        pass
+        self.speed = 1 # increases after x amount of time playing the game?
+        self.possible_poles: list[Pole] = [Pole() for _ in range(NUM_POSSIBLE_POLES)]
+        self.active_poles = list() # usually 5 or 6 on a screen at a time
+        self.bird = Bird()
+        self.score: int = 0 # when each pole goes past the x axis of the bird, score increases
+
 
     def setup_game(self):
         # TODO
         pass
 
     def update(self, potentiometer_value: int, button_pressed: bool) -> None:
-        self.time = time.monotonic()
+        self.time = time.monotonic()        
+        #
+        # Check if button pressed - if true, fly up, else, gravity
+        # Check if pole has passed bird. If yes, increment score
+        
         display.refresh() 
+
+    # set up/reset the game
+    def reset_level(self) -> None:
+        pass
+    
+    # checks if the bird collides with a pole
+    def check_pole_collision(self) -> None:
+        # TODO if it does, 
+        
+        pass
+
+    def check_pole_score(self, current_pole) -> bool:
+        if current_pole.x < self.bird.x:
+            return True
+        else:
+            return False
+    
+    # checks if the bird collides with the ground.
+    def check_ground_collision(self) -> None:
+        pass
 
 
 # ---------------- Global game instance ----------------
