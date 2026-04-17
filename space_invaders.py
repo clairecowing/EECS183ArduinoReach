@@ -357,7 +357,6 @@ class Game:
                 self.reset_level()
 
         # 3. update the player if potentiometer moved significantly
-        # floor division normalizes
 
         # alternatively: we could define a player.move function, not sure if thats necessary tho or if this will work - maddie
 
@@ -366,14 +365,14 @@ class Game:
             self.player.set_x((potentiometer_value // 2048)) #1187 # 2048 (65535/ 32)
             self.player.draw()
 
-        #print(button.value)
+        # print(button.value)
         print(button_pressed)
         # 4. detect if should fire
-        if button_pressed and self.ball.fired == False:
+        if not (button_pressed and self.ball.fired):
             self.ball.fire(self.player.x, self.player.y - 2)
 
         # 5. move cannonball if fired
-        if self.ball.fired == True:
+        if self.ball.fired:
             if self.time > self.cannonball_time + 0.05:
                 self.ball.move()
                 for invader in self.enemies:
