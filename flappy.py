@@ -92,39 +92,119 @@ def fill_screen(color) -> None:
         matrix[i] = color
     display.refresh()
 
+NUM_POSSIBLE_POLES = 5 #! -- change this later
+
 # -------------------------------------------------- #
 
 class Bird:
     def __init__(self):
-        self.x =  # TODO
-        self.y =  # TODO
-    
+        self.x = 8 # middle & bottom pixel of the bird
+        self.y = 8
+
     def fly_up(self):
-        # TODO
-        pass
+        y += 2
+
+    def draw_bird(self):
+        matrix[self.x, self,y] = YELLOW
+        matrix[self.x - 1, self,y] = YELLOW
+        matrix[self.x, self,y - 1] = YELLOW
+        matrix[self.x + 1, self,y - 1] = ORANGE
+        
     
     def gravity(self):
+        self.y -= 1
+    
+    def reset(self):
         # TODO
-        pass
+
 
 class Pole:
-    def __init__(self):
-        # TODO idk what sjould be here
+    def __init__(self,):
+        self.x = arg_x
+        self.y = arg_y
+        # TODO idk what should be here
+        pass
+    
+    def move(self):
+        pass
+
+    def draw(self):
+        # may also need to take in some argument indicating the level of the pole
         pass
 
 # ---------------- Game ----------------
 class Game:
     def __init__(self) -> None:
-        # TODO
-        pass
+        self.speed = 1 # increases after x amount of time playing the game?
+        self.possible_poles: list[Pole] = [Pole() for _ in range(NUM_POSSIBLE_POLES)]
+        self.active_poles = list() # usually 5 or 6 on a screen at a time
+        self.bird = Bird()
+        self.score: int = 0 # when each pole goes past the x axis of the bird, score increases
+        self.time: float = time.monotonic()
+        self.bird_time = time.monotonic()
+        self.pole_time = time.monotonic()
+        self.game_speed = 1 # how fast the poles are being generated
 
     def setup_game(self):
         # TODO
         pass
 
     def update(self, potentiometer_value: int, button_pressed: bool) -> None:
-        self.time = time.monotonic()
+        self.time = time.monotonic()        
+
+        # Check if button pressed - if true, fly up, else, gravity
+        # Check if pole has passed bird. If yes, increment score
+
+        # if enough time has passed, move pole to left (erase, move, draw)
+        # and append new pole to active list
+        if self.time > self.pole_time + 3:
+            for curr_pole in self.active_poles:
+                pass
+                # check if movement will make it go out of bounds
+                # if yes, remove it from list / draw it only partially
+                # else, move it & reset self.pole_time
+        if self.time > self.pole_generated_time + self.game_speed:
+            next_pole_index = int(random.random() * NUM_POSSIBLE_POLES) + 1
+            # if enough time has passed, generate a new pole & add to list
+            self.active_poles.append(self.possible_poles[next_pole_index])
+            
         display.refresh() 
+
+
+            # set up/reset the game
+    def reset_level(self) -> None:
+        # fill screen 
+        
+        fill_screen(BLACK)
+        print_text("Score", self.score)
+        time.sleep(1)
+
+        self.bird.reset()
+        self.active_poles = []
+        
+
+        pass
+    
+    # checks if the bird collides with a pole
+    def check_pole_collision(self, curr_pole: Pole) -> bool:
+        # TODO if it does, 
+        if (self.bird.x == curr_pole.x) or (self.bird.x == curr_pole.x + 1): #! double check this works after draw pole is implemented
+            if self.bird.y <= curr_pole.y:
+                return True
+        else:
+            return False
+
+
+    def check_pole_score(self, current_pole) -> bool:
+        if current_pole.x < self.bird.x:
+            return True
+        else:
+            return False
+    
+    # checks if the bird collides with the ground.
+    def check_ground_collision(self) -> None:
+        if self.bird.x >= 14:
+            self.reset_level()
 
 
 # ---------------- Global game instance ----------------
