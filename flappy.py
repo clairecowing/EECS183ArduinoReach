@@ -231,42 +231,6 @@ class Game:
             self.reset_level()
 
 
-            # set up/reset the game
-    def reset_level(self) -> None:
-        # fill screen 
-        
-        fill_screen(BLACK)
-        print_text("Score", self.score)
-        time.sleep(1)
-
-        self.bird.reset()
-        self.active_poles = []
-        
-
-        pass
-    
-    # checks if the bird collides with a pole
-    def check_pole_collision(self, curr_pole: Pole) -> bool:
-        # TODO if it does, 
-        if (self.bird.x == curr_pole.x) or (self.bird.x == curr_pole.x + 1): #! double check this works after draw pole is implemented
-            if self.bird.y <= curr_pole.y:
-                return True
-        else:
-            return False
-
-
-    def check_pole_score(self, current_pole) -> bool:
-        if current_pole.x < self.bird.x:
-            return True
-        else:
-            return False
-    
-    # checks if the bird collides with the ground.
-    def check_ground_collision(self) -> None:
-        if self.bird.x >= 14:
-            self.reset_level()
-
-
 # ---------------- Global game instance ----------------
 game = Game()
 
