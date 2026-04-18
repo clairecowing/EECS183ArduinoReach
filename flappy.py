@@ -19,7 +19,8 @@ button.pull = Pull.UP
 # set up the potentiometer
 pot = AnalogIn(board.A5)
 
-#set up the LED display
+# set up the LED display
+
 panel = rgbmatrix.RGBMatrix(
     width=32, bit_depth=4,
     rgb_pins=[board.D8, board.D9, board.D10, board.D11, board.D12, board.D13],
@@ -92,8 +93,6 @@ def fill_screen(color) -> None:
         matrix[i] = color
     display.refresh()
 
-NUM_POSSIBLE_POLES = 5 #! -- change this later
-
 # -------------------------------------------------- #
 
 class Bird:
@@ -112,34 +111,57 @@ class Bird:
     
     def gravity(self):
         self.y -= 1
-    
+        
     def reset(self):
         self.x = 8
         self.y = 8
 
 
 class Pole:
-    def __init__(self,):
-        self.pole_height = random.randrange(4, 11)       
-        self.x = arg_x #! idk what to do for x, should it be offscreen?
+    def __init__(self):
+        self.pole_height = random.randrange(5, 10)     
+        self.x = 32
         self.y = self.pole_height
-
-        # TODO idk what should be here
-        pass
-    
+        self.has_passed = False
+   
     def move(self):
-        pass
+        self.x -= 1
 
-    def draw(self, pole_height):
-        # may also need to take in some argument indicating the level of the pole
-        pass
+    def draw(self):
+        self.draw_with_rgb(LIME)
+
+    def erase(self):
+        self.draw_with_rgb(BLACK)
+
+    def draw_with_rgb(self, color: int):
+        left = self.x
+
+        if left >= 31:
+            for i in range(0, self.pole_height - 6):
+                matrix[31, i] = color
+            for i in range(self.pole_height, 16):
+                matrix[31, i] = color
+
+        elif left < 0:
+            for i in range(0, self.pole_height - 6):
+                matrix[0, i] = color
+            for i in range(self.pole_height, 16):
+                matrix[0, i] = color
+        else:
+            for i in range(0, self.pole_height - 6):
+                matrix[left, i] = color
+                matrix[left + 1, i] = color
+
+            for i in range(self.pole_height, 16):
+                matrix[left, i] = color
+                matrix[left + 1, i] = color
+     
 
 # ---------------- Game ----------------
 class Game:
     def __init__(self) -> None:
         self.speed = 1  # increases after x amount of time playing the game?
-        self.possible_poles: list[Pole] = [Pole() for _ in range(NUM_POSSIBLE_POLES)]
-        self.active_poles = list()  # usually 5 or 6 on a screen at a time
+        self.active_poles = [Pole()]  # usually 5 or 6 on a screen at a time
         self.bird = Bird()
         self.score: int = 0  # when each pole goes past the x axis of the bird, score increases
         self.time: float = time.monotonic()
@@ -148,11 +170,10 @@ class Game:
         self.game_speed = 1  # how fast the poles are being generated
 
     def setup_game(self):
-        # TODO
         # reset bird location
         self.bird.reset()
         # reset active poles list
-        self.active_poles = []
+        self.active_poles = [Pole()]
         self.score = 0
         # is there anything else to be reset?
         self.game_speed = 1
@@ -176,22 +197,34 @@ class Game:
                 self.bird_time = self.time
 
         # Check if pole has passed bird. If yes, increment score
-        if curr_pole.x <= self.bird.x:
-            self.score += 1
+        for curr_pole in self.active_poles:
+            if self.check_pole_score() and curr_pole.has_passed is False:
+                self.score += 1
+                curr_pole.has_passed = True
+       
         # if enough time has passed, move pole to left (erase, move, draw)
         # and append new pole to active list
         if self.time > self.pole_time + 3:
-            for curr_pole in self.active_poles:
-                pass
+            for i in range(len(self.active_poles)):
+                curr_pole = self.active_poles[i]
+                curr_pole.erase()
+                curr_pole.move()
+
                 # check if movement will make it go out of bounds
-                # if yes, remove it from list / draw it only partially
-                # else, move it & reset self.pole_time
+                # if yes, remove it from list
+                if curr_pole.x < -1:
+                    self.active_poles.pop([i])
+                else:
+                    curr_pole.draw()
+                # else, move it
+            # reset self.pole_time
+            self.pole_time = time.monotonic()
 
         # drawing poles? 
-        if self.time > self.pole_generated_time + self.game_speed:
-            next_pole_index = int(random.random() * NUM_POSSIBLE_POLES) + 1
+        last_pole = self.active_poles[-1]
+        if last_pole.x == 23:
             # if enough time has passed, generate a new pole & add to list
-            self.active_poles.append(self.possible_poles[next_pole_index])
+            self.active_poles.append(Pole())
 
         display.refresh()
 
@@ -211,13 +244,14 @@ class Game:
 
     # checks if the bird collides with a pole
     def check_pole_collision(self, curr_pole: Pole) -> bool:
-        # TODO if it does, 
-        if (self.bird.x == curr_pole.x) or (self.bird.x == curr_pole.x + 1): #! double check this works after draw pole is implemented
-            if self.bird.y <= curr_pole.y:
+
+        if (self.bird.x == curr_pole.x) or (self.bird.x == curr_pole.x + 1):
+            if (self.bird.y - 1) <= (curr_pole.pole_height - 6):
+                return True
+            elif (self.bird.y) >= (curr_pole.pole_height):
                 return True
         else:
             return False
-
 
     def check_pole_score(self, current_pole) -> bool:
         if current_pole.x < self.bird.x:

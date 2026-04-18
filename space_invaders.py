@@ -218,8 +218,6 @@ class Cannonball:
             self.draw()
         else:
             self.reset()
-        
-
 
     # resets private data members to initial values
     '''why do we have this as a separate function to reset()--------------------------------'''
