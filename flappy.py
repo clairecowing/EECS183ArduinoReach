@@ -156,7 +156,7 @@ class Game:
         self.score = 0
         # is there anything else to be reset?
         self.game_speed = 1
-
+        self.bird.draw_bird()
 
     def update(self, potentiometer_value: int, button_pressed: bool) -> None:
         self.time = time.monotonic()    
@@ -186,12 +186,14 @@ class Game:
                 # check if movement will make it go out of bounds
                 # if yes, remove it from list / draw it only partially
                 # else, move it & reset self.pole_time
+
+        # drawing poles? 
         if self.time > self.pole_generated_time + self.game_speed:
             next_pole_index = int(random.random() * NUM_POSSIBLE_POLES) + 1
             # if enough time has passed, generate a new pole & add to list
             self.active_poles.append(self.possible_poles[next_pole_index])
 
-        display.refresh() 
+        display.refresh()
 
     def lose(self):
         print_text("You lose")
@@ -205,14 +207,6 @@ class Game:
         print_text("Score", self.score)
         time.sleep(1)
         self.setup_game()
-        # reset bird location
-        self.bird.reset()
-        # reset active poles list
-        self.active_poles = []
-        self.score = 0
-        # is there anything else to be reset?
-        self.game_speed = 1
-        self.bird.draw_bird()
         self.time = time.monotonic()
 
     # checks if the bird collides with a pole
