@@ -38,6 +38,8 @@ display.root_group = g1
 # pallette color index numbers
 BLACK, RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, WHITE, LIME, AQUA = range(10)
 
+POLE_GAP = 7
+
 # set pallette colors
 pixelColor[BLACK] = 0x000000
 pixelColor[RED] = 0xff0000
@@ -101,25 +103,35 @@ class Bird:
         self.y = 8
 
     def fly_up(self):
-        self.y += 2
+        if self.y > 2:
+            self.y -= 2
+        else:
+            self.y = 2
 
-    def draw_bird(self):
-        matrix[self.x, self.y] = YELLOW
-        matrix[self.x - 1, self.y] = YELLOW
-        matrix[self.x, self.y - 1] = YELLOW
+    def draw_bird_rgb(self, color):
+        matrix[self.x, self.y] = color
+        matrix[self.x - 1, self.y] = color
+        matrix[self.x, self.y - 1] = color
+
+    def draw(self):
+        self.draw_bird_rgb(YELLOW)
         matrix[self.x + 1, self.y - 1] = ORANGE
-    
+
     def gravity(self):
-        self.y -= 1
+        self.y += 1
         
     def reset(self):
         self.x = 8
         self.y = 8
+    
+    def erase(self):
+        self.draw_bird_rgb(BLACK)
+        matrix[self.x + 1, self.y - 1] = BLACK
 
 
 class Pole:
     def __init__(self):
-        self.pole_height = random.randrange(5, 10)     
+        self.pole_height = random.randrange(POLE_GAP, 15)     
         self.x = 32
         self.y = self.pole_height
         self.has_passed = False
@@ -137,18 +149,18 @@ class Pole:
         left = self.x
 
         if left >= 31:
-            for i in range(0, self.pole_height - 6):
+            for i in range(0, self.pole_height - POLE_GAP):
                 matrix[31, i] = color
             for i in range(self.pole_height, 16):
                 matrix[31, i] = color
 
         elif left < 0:
-            for i in range(0, self.pole_height - 6):
+            for i in range(0, self.pole_height - POLE_GAP):
                 matrix[0, i] = color
             for i in range(self.pole_height, 16):
                 matrix[0, i] = color
         else:
-            for i in range(0, self.pole_height - 6):
+            for i in range(0, self.pole_height - POLE_GAP):
                 matrix[left, i] = color
                 matrix[left + 1, i] = color
 
@@ -167,7 +179,9 @@ class Game:
         self.time: float = time.monotonic()
         self.bird_time = time.monotonic()
         self.pole_time = time.monotonic()
+        self.gravity_time = time.monotonic()
         self.game_speed = 1  # how fast the poles are being generated
+        self.button_press = False
 
     def setup_game(self):
         # reset bird location
@@ -177,43 +191,67 @@ class Game:
         self.score = 0
         # is there anything else to be reset?
         self.game_speed = 1
-        self.bird.draw_bird()
+        self.bird.draw()
+        self.button_press = False
+        self.last_button = False
 
     def update(self, potentiometer_value: int, button_pressed: bool) -> None:
         self.time = time.monotonic()    
         display.refresh()
-
+        print('hi')
         curr_pole: Pole = self.active_poles[0]
+
+        if self.check_offscreen():
+            self.lose()
+            self.bird.reset()
+            self.reset_level()
 
         # Check if bird collided with pole. If yes, lose game
         if self.check_pole_collision(curr_pole):
             self.lose()
             self.reset_level()
 
+        # gravity
+
+        if self.time > self.gravity_time + 0.4:
+            if self.bird.y <= 15:
+                self.bird.erase()
+                self.bird.gravity()
+                self.bird.draw()
+                self.gravity_time = self.time
+
         # Check if button pressed - if true, fly up, else, gravity
-        if button_pressed:
-            if self.time > self.bird_time + 0.05:
+        if self.check_button_clicked(button_pressed): 
+            print(self.check_button_clicked(button_pressed))
+            if self.time > self.bird_time + 0.1:
+                self.bird.erase()
                 self.bird.fly_up()
+                self.bird.draw()
                 self.bird_time = self.time
+        
+        
+        if self.time > self.bird_time + 0.05:
+            self.button_press = False
+
 
         # Check if pole has passed bird. If yes, increment score
         for curr_pole in self.active_poles:
-            if self.check_pole_score() and curr_pole.has_passed is False:
-                self.score += 1
-                curr_pole.has_passed = True
+            if self.check_pole_score(curr_pole):
+                if not curr_pole.has_passed:
+                    self.score += 1
+                    curr_pole.has_passed = True
        
         # if enough time has passed, move pole to left (erase, move, draw)
         # and append new pole to active list
-        if self.time > self.pole_time + 3:
-            for i in range(len(self.active_poles)):
-                curr_pole = self.active_poles[i]
+        if self.time > self.pole_time + 1/(potentiometer_value//2048 + 1):
+            for curr_pole in self.active_poles:
                 curr_pole.erase()
                 curr_pole.move()
 
                 # check if movement will make it go out of bounds
                 # if yes, remove it from list
                 if curr_pole.x < -1:
-                    self.active_poles.pop([i])
+                    self.active_poles.remove(curr_pole)
                 else:
                     curr_pole.draw()
                 # else, move it
@@ -228,8 +266,12 @@ class Game:
 
         display.refresh()
 
+    def check_offscreen(self):
+        if self.bird.y >= 15:
+            return True
+
     def lose(self):
-        print_text("You lose")
+        print_text("You", "lose")
         time.sleep(1)
         print_text("Score:", self.score)
         time.sleep(1)
@@ -244,9 +286,8 @@ class Game:
 
     # checks if the bird collides with a pole
     def check_pole_collision(self, curr_pole: Pole) -> bool:
-
         if (self.bird.x == curr_pole.x) or (self.bird.x == curr_pole.x + 1):
-            if (self.bird.y - 1) <= (curr_pole.pole_height - 6):
+            if (self.bird.y - 1) <= (curr_pole.pole_height - POLE_GAP):  # top part
                 return True
             elif (self.bird.y) >= (curr_pole.pole_height):
                 return True
@@ -254,7 +295,7 @@ class Game:
             return False
 
     def check_pole_score(self, current_pole) -> bool:
-        if current_pole.x < self.bird.x:
+        if current_pole.x + 1 < self.bird.x:
             return True
         else:
             return False
@@ -264,6 +305,14 @@ class Game:
         if self.bird.x >= 14:
             self.reset_level()
 
+    # returns true ON BUTTON CLICKED (after it has been released)
+    def check_button_clicked(self, button_pressed):
+        if button_pressed is False and self.last_button is True:
+            self.last_button = button_pressed
+            return True
+        else:
+            self.last_button = button_pressed
+            return False
 
 # ---------------- Global game instance ----------------
 game = Game()
