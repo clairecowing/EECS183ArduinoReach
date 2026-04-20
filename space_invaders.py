@@ -364,7 +364,7 @@ class Game:
             self.player.set_x((potentiometer_value // 2048)) #1187 # 2048 (65535/ 32)
             self.player.draw()
 
-        #print(button.value)
+        # print(button.value)
         print(button_pressed)
         # 4. detect if should fire
         if button_pressed and self.ball.fired == False:

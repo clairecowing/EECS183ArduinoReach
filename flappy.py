@@ -17,7 +17,7 @@ button.direction = Direction.INPUT
 button.pull = Pull.UP
 
 # set up the potentiometer
-pot = AnalogIn(board.A5)
+pot = AnalogIn(board.A5) 
 
 # set up the LED display
 
@@ -196,9 +196,9 @@ class Game:
         self.last_button = False
 
     def update(self, potentiometer_value: int, button_pressed: bool) -> None:
+        # print(1/(potentiometer_value//2048 + 1)) # speed of the game
         self.time = time.monotonic()    
         display.refresh()
-        print('hi')
         curr_pole: Pole = self.active_poles[0]
 
         if self.check_offscreen():
@@ -222,7 +222,7 @@ class Game:
 
         # Check if button pressed - if true, fly up, else, gravity
         if self.check_button_clicked(button_pressed): 
-            print(self.check_button_clicked(button_pressed))
+            # print(self.check_button_clicked(button_pressed))
             if self.time > self.bird_time + 0.1:
                 self.bird.erase()
                 self.bird.fly_up()
@@ -291,6 +291,18 @@ class Game:
                 return True
             elif (self.bird.y) >= (curr_pole.pole_height):
                 return True
+        # checks for beak collision
+        elif (self.bird.x + 1 == curr_pole.x) or (self.bird.x + 1 == curr_pole.x + 1):
+            if (self.bird.y - 1) <= (curr_pole.pole_height - POLE_GAP):  # top part
+                return True
+            elif (self.bird.y - 1) >= (curr_pole.pole_height):
+                return True
+        # checks for tail collision
+        elif (self.bird.x - 1 == curr_pole.x) or (self.bird.x - 1 == curr_pole.x + 1):
+            if (self.bird.y) <= (curr_pole.pole_height - POLE_GAP):  # top part
+                return True
+            elif (self.bird.y) >= (curr_pole.pole_height):
+                return True
         else:
             return False
 
@@ -307,7 +319,9 @@ class Game:
 
     # returns true ON BUTTON CLICKED (after it has been released)
     def check_button_clicked(self, button_pressed):
-        if button_pressed is False and self.last_button is True:
+        print(f"curr button:  {button_pressed}  last button {self.last_button}")
+        if button_pressed is True and self.last_button is False:
+            print("button clicked")
             self.last_button = button_pressed
             return True
         else:

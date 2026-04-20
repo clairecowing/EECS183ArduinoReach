@@ -8,8 +8,8 @@ import rgbmatrix
 from digitalio import DigitalInOut, Direction, Pull
 from analogio import AnalogIn
 import adafruit_display_text.label
-import space_invaders
-import flappy
+# import space_invaders
+# import flappy
 
 displayio.release_displays()
 
@@ -42,8 +42,8 @@ BLACK, RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, WHITE, LIME, AQUA = range(10)
 # set pallette colors
 pixelColor[BLACK] = 0x000000
 pixelColor[RED] = 0xff0000
-pixelColor[ORANGE] = 0xffa500
-pixelColor[YELLOW] = 0xffff00
+pixelColor[ORANGE] = 0xf34e00
+pixelColor[YELLOW] = 0xffe400
 pixelColor[GREEN] = 0x008000
 pixelColor[BLUE] = 0x0000ff
 pixelColor[PURPLE] = 0xa020f0
@@ -86,7 +86,7 @@ def print_text(inputText: str, value: str | int | None = None) -> None:
 
     display.refresh()
 
-    # display.root_group = g1
+    display.root_group = g1
 
 
 def fill_screen(color) -> None:
@@ -94,31 +94,6 @@ def fill_screen(color) -> None:
     for i in range(matrix.height * matrix.width):
         matrix[i] = color
     display.refresh()
-
-# ---------- DRAWING FUNCTIONS ---------
-def draw_bird(x_arg, y_arg):
-    matrix[x_arg, y_arg] = YELLOW
-    matrix[x_arg - 1, y_arg] = YELLOW
-    matrix[x_arg, y_arg - 1] = YELLOW
-    matrix[x_arg + 1, y_arg - 1] = ORANGE
-
-def draw_invader(x_arg, y_arg):
-    left = x_arg
-    top = y_arg
-    body_color = RED
-    eye_color = BLUE
-    matrix[left + 1, top] = body_color
-    matrix[left + 2, top] = body_color
-    matrix[left, top + 1] = body_color
-    matrix[left + 1, top + 1] = eye_color
-    matrix[left + 2, top + 1] = eye_color
-    matrix[left + 3, top + 1] = body_color
-    matrix[left, top + 2] = body_color
-    matrix[left + 1, top + 2] = body_color
-    matrix[left + 2, top + 2] = body_color
-    matrix[left + 3, top + 2] = body_color
-    matrix[left, top + 3] = body_color
-    matrix[left + 3, top + 3] = body_color
 
 # ---------------- MENU ----------------
 
@@ -128,75 +103,131 @@ class Menu:
         self.last_selected = -1
     
     def setup_menu(self):
-        print_text("Main Menu") # maybe do a cute name like micro arcade or smth or say welcome idk
+        fill_screen(BLACK)
+        print_text("Micro", "Games") # maybe do a cute name like micro arcade or smth or say welcome idk
+        time.sleep(1)
+        print("setting up")
+        fill_screen(BLACK)
+        # display.refresh()
         self.draw_menu_ui()
+
 
     def run_menu(self, pot_value, button_value) -> int:
         # for this it makes it so if it's over the halfway point then it's flappy bird else it's space invaders, but it might be better to have it change when you turn left vs. right instead of actual potentiometer value but idk how to do that rn
-        while button_value == True:
-            if pot_value > 31744:
-                self.selected_game = 1
-            else:
-                self.selected_game = 0
-            
-            if self.selected_game != self.last_selected:
-                self.draw_menu_ui(self.selected_game)
-                self.last_selected = self.selected_game
-            
-            time.sleep(2)
         
-        while button.value == False:
-            time.sleep(2)
-        
-        g1.remove(menu_label)
-        fill_screen(BLACK)
+        if pot_value > 31744:
+            self.selected_game = 1
+        else:
+            self.selected_game = 0
+            
+        if self.selected_game != self.last_selected:
+            self.draw_menu_ui()
+            self.last_selected = self.selected_game
 
-        return selected_game
+        
+        if button_value:
+            self.selection()
     
-    def draw_menu_ui(self, selected_game: int) -> None:
-        fill_screen(BLACK)
-
+            # time.sleep(2)
+        
+        # g1.remove(menu_label)
+        display.refresh()
+        
+    
+    def draw_menu_ui(self) -> None:
+        # fill_screen(BLACK)
+        print("drawing menu ui")
     #  i just used the functions from each of the games but might need to hardcode it/adjust location but i can't see the board
         # invader_pixels = draw_with_rgb
-        draw_invader(4, 7)
+        self.draw_invader(6, 6)
         # for px, py in invader_pixels:
             # matrix[px + 4, py + 7] = # color
 
-
-        draw_bird(21, 7)
+        self.draw_bird(21, 6)
+        display.refresh()
         # bird_pixels = draw_bird
         # for px, py, color in bird_pixels:
             # matrix[px + 21, py + 7] = # color
             
-        arrow_x = 0 #?
+        arrow_x = 7 #?
+        print(f"selected game: {self.selected_game}")
         if self.selected_game == 0:
             arrow_x = 7
+            other_x = 23
         else: 
             arrow_x = 23
+            other_x = 7
         # ARROW
-        self.draw_arrow(arrow_x)
+        self.draw_arrow(other_x, BLACK)
+        self.draw_arrow(arrow_x, WHITE)
      
-    def draw_arrow(self, arrow_x):
-        matrix[arrow_x, 13] = WHITE
-        matrix[arrow_x - 1, 14] = WHITE
-        matrix[arrow_x, 14] = WHITE
-        matrix[arrow_x + 1, 14] = WHITE
-        matrix[arrow_x, 15] = WHITE
+    def draw_arrow(self, arrow_x, color):
+        matrix[arrow_x, 11] = color
+        matrix[arrow_x - 1, 12] = color
+        matrix[arrow_x, 12] = color
+        matrix[arrow_x + 1, 12] = color
+        matrix[arrow_x, 13] = color
+        matrix[arrow_x, 14] = color
 
 
-def main() -> None:
-    selection = run_menu(button.value)
-    if selection == 0:
-        game = space_invaders
-    else: 
-        game = flappy
+    def selection(self) -> None:
+        if self.selected_game == 0:
+            game = "space_invaders"
+            # space_invaders.setup()
+            print_text("Space", "Invaders")
+            time.sleep(2)
+            # just call space invaders
+        else: 
+            game = "flappy"
+            # flappy.setup()
+            print_text("Flappy", "Bird")
+            time.sleep(2)
+            # just call flappy set up
 
-    game.setup_game()
+        # game.setup()
     
-    while True:
-        game.update(pot.value, not button.value)
+    def draw_bird(self, x_arg, y_arg):
+        top = y_arg
+        left = x_arg
+        matrix[left + 2, top] = YELLOW
+        matrix[left + 3, top] = YELLOW
+        matrix[left + 1, top + 1] = YELLOW
+        matrix[left + 2, top + 1] = YELLOW
+        matrix[left + 3, top + 1] = BLUE
+        matrix[left + 4, top + 1] = YELLOW
+        matrix[left, top + 2] = WHITE
+        matrix[left + 1, top + 2] = WHITE
+        matrix[left + 2, top + 2] = YELLOW
+        matrix[left + 3, top + 2] = YELLOW
+        matrix[left + 4, top + 2] = ORANGE
+        matrix[left + 5, top + 2] = ORANGE
+  
+        matrix[left + 1, top + 3] = YELLOW
+        matrix[left + 2, top + 3] = YELLOW
+        matrix[left + 3, top + 3] = YELLOW
+        matrix[left + 4, top + 3] = YELLOW
+        print("drawing bird")
 
-main()
+    def draw_invader(self, x_arg, y_arg):
+        print("drawing_invader")
+        left = x_arg
+        top = y_arg
+        body_color = RED
+        eye_color = BLUE
+        matrix[left + 1, top] = body_color
+        matrix[left + 2, top] = body_color
+        matrix[left, top + 1] = body_color
+        matrix[left + 1, top + 1] = eye_color
+        matrix[left + 2, top + 1] = eye_color
+        matrix[left + 3, top + 1] = body_color
+        matrix[left, top + 2] = body_color
+        matrix[left + 1, top + 2] = body_color
+        matrix[left + 2, top + 2] = body_color
+        matrix[left + 3, top + 2] = body_color
+        matrix[left, top + 3] = body_color
+        matrix[left + 3, top + 3] = body_color
+
+
 
 # ---------------- Global game instance ----------------
 menu = Menu()
