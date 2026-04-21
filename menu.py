@@ -394,7 +394,7 @@ class Space_Game:
                 invader.can_move = True
 
         # 6. move invaders
-        if self.time > self.invader_time + .1:            
+        if self.time > self.invader_time + 2:            
             #check to make sure invader is within the screen
             #and that its not touching player.       maddie: we already check for collision with player above.
             if not self.check_floor_collision():
@@ -741,6 +741,8 @@ class Flappy_Game:
         self.bird.draw()
         self.button_press = False
         self.last_button = False
+        print_text("Load", "ing")
+        time.sleep(2)
 
     def update(self, potentiometer_value: int, button_pressed: bool) -> None:
         # print(1/(potentiometer_value//2048 + 1)) # speed of the game
@@ -750,13 +752,12 @@ class Flappy_Game:
 
         if self.check_offscreen():
             self.lose()
-            self.bird.reset()
-            self.reset_level()
+
 
         # Check if bird collided with pole. If yes, lose game
         if self.check_pole_collision(curr_pole):
             self.lose()
-            self.reset_level()
+
 
         # gravity
 
@@ -889,11 +890,11 @@ def flappy_setup() -> None:
     
 def flappy_loop() -> None:
     while True:
-        flappy_game.update(pot.value, button.value)
         if flappy_game.game_over:
             print("game is over")
             fill_screen(BLACK)
             break 
+        flappy_game.update(pot.value, button.value)
 
 
 # ---------------- MENU ----------------
@@ -976,14 +977,14 @@ class Menu:
         if self.selected_game == 0:
             
             # space_invaders.setup()
-            print_text("Space", "Invaders")
+            print_text("Space", "Alien")
             time.sleep(2)
             space_setup()
             # just call space invaders
         else: 
             game = "flappy"
             # flappy.setup()
-            print_text("Flappy", "Bird")
+            print_text("Flapy", "Bird")
             time.sleep(2)
             # just call flappy set up
             flappy_setup()
@@ -1045,4 +1046,3 @@ def setup() -> None:
 def loop() -> None:
     while True:
         menu.run_menu(pot.value, button.value)
-    
